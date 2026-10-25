@@ -26,6 +26,8 @@ namespace Barlog_Raul_Lab2.Pages.BookPages
             var book = await _context.Book
                 .Include(b => b.Publisher)
                 .Include(b => b.Author)
+                .Include(b => b.BookCategories)
+                    .ThenInclude(b => b.Category)
                 .FirstOrDefaultAsync(m => m.ID == id);
 
             if (book == null)

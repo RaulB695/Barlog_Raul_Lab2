@@ -1,4 +1,4 @@
-﻿namespace Barlog_Raul_Lab2.Models
+namespace Barlog_Raul_Lab2.Models
 {
     public class Author
     {
@@ -7,6 +7,8 @@
         public string LastName { get; set; } = string.Empty;
 
         public string FullName => $"{FirstName} {LastName}";
+
+        public override string ToString() => FullName;
 
         public ICollection<Book>? Books { get; set; }
     }
