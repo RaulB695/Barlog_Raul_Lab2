@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Barlog_Raul_Lab2.Models;
 
 namespace Barlog_Raul_Lab2.Pages.BookPages
 {
-    public class EditModel : PageModel
+    public class EditModel : BookCategoriesPageModel
     {
         private readonly Barlog_Raul_Lab2Context _context;
 
@@ -18,12 +17,6 @@ namespace Barlog_Raul_Lab2.Pages.BookPages
         [BindProperty]
         public Book Book { get; set; } = default!;
 
-        private void LoadLists()
-        {
-            ViewData["AuthorID"] = new SelectList(_context.Author, "ID", "FullName");
-            ViewData["PublisherID"] = new SelectList(_context.Publisher, "ID", "PublisherName");
-        }
-
         public async Task<IActionResult> OnGetAsync(int? id)
         {
             if (id == null)
@@ -31,40 +24,78 @@ namespace Barlog_Raul_Lab2.Pages.BookPages
                 return NotFound();
             }
 
-            var book = await _context.Book.FirstOrDefaultAsync(m => m.ID == id);
-            if (book == null)
+            // se va include Author conform cu sarcina de la lab 2
+            Book = await _context.Book
+                .Include(b => b.Author)
+                .Include(b => b.Publisher)
+                .Include(b => b.BookCategories).ThenInclude(b => b.Category)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ID == id);
+
+            if (Book == null)
             {
                 return NotFound();
             }
-            Book = book;
-            LoadLists();
+
+            // apelam PopulateAssignedCategoryData pentru a obtine informatiile necesare checkbox-urilor folosind clasa AssignedCategoryData
+            PopulateAssignedCategoryData(_context, Book);
+
+            var authorList = _context.Author.Select(x => new
+            {
+                x.ID,
+                FullName = x.LastName + " " + x.FirstName
+            });
+
+            ViewData["AuthorID"] = new SelectList(authorList, "ID", "FullName");
+            ViewData["PublisherID"] = new SelectList(_context.Publisher, "ID", "PublisherName");
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(int? id, string[]? selectedCategories)
         {
-            if (!ModelState.IsValid)
+            if (id == null)
             {
-                LoadLists();
-                return Page();
+                return NotFound();
             }
 
-            _context.Attach(Book).State = EntityState.Modified;
+            // se va include Author conform cu sarcina de la lab 2
+            var bookToUpdate = await _context.Book
+                .Include(i => i.Author)
+                .Include(i => i.Publisher)
+                .Include(i => i.BookCategories)
+                    .ThenInclude(i => i.Category)
+                .FirstOrDefaultAsync(s => s.ID == id);
 
-            try
+            if (bookToUpdate == null)
             {
+                return NotFound();
+            }
+
+            // se va modifica AuthorID conform cu sarcina de la lab 2
+            if (await TryUpdateModelAsync<Book>(
+                bookToUpdate,
+                "Book",
+                i => i.Title, i => i.AuthorID,
+                i => i.Price, i => i.PublishingDate, i => i.PublisherID))
+            {
+                UpdateBookCategories(_context, selectedCategories, bookToUpdate);
                 await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Book.Any(e => e.ID == Book.ID))
-                {
-                    return NotFound();
-                }
-                throw;
+                return RedirectToPage("./Index");
             }
 
-            return RedirectToPage("./Index");
+            // Apelam UpdateBookCategories pentru a aplica informatiile din checkboxuri la entitatea Books care este editata
+            UpdateBookCategories(_context, selectedCategories, bookToUpdate);
+            PopulateAssignedCategoryData(_context, bookToUpdate);
+
+            var authorList = _context.Author.Select(x => new
+            {
+                x.ID,
+                FullName = x.LastName + " " + x.FirstName
+            });
+            ViewData["AuthorID"] = new SelectList(authorList, "ID", "FullName");
+            ViewData["PublisherID"] = new SelectList(_context.Publisher, "ID", "PublisherName");
+
+            return Page();
         }
     }
 }
