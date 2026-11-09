@@ -5,6 +5,8 @@ namespace Barlog_Raul_Lab2
 {
     public class Barlog_Raul_Lab2Context : DbContext
     {
+        public DbSet<Barlog_Raul_Lab2.Models.Borrowing> Borrowing { get; set; } = default!;
+        public DbSet<Barlog_Raul_Lab2.Models.Member> Member { get; set; } = default!;
         public Barlog_Raul_Lab2Context(DbContextOptions<Barlog_Raul_Lab2Context> options)
             : base(options)
         {
