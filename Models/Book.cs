@@ -7,9 +7,12 @@ namespace Barlog_Raul_Lab2.Models
     {
         public int ID { get; set; }
 
+        [Required]
+        [StringLength(150, MinimumLength = 3)]
         [Display(Name = "Book Title")]
         public string Title { get; set; } = string.Empty;
 
+        [Range(0.01, 500)]
         [Column(TypeName = "decimal(6, 2)")]
         public decimal Price { get; set; }
 
