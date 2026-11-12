@@ -1,10 +1,12 @@
 using Barlog_Raul_Lab2.Models;
 using Barlog_Raul_Lab2.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace Barlog_Raul_Lab2.Pages.CategoryPages
 {
+    [Authorize(Roles = "Admin")]
     public class IndexModel : PageModel
     {
         private readonly Barlog_Raul_Lab2Context _context;

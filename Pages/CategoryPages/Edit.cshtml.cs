@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using Barlog_Raul_Lab2;
 
 namespace Barlog_Raul_Lab2.Pages.CategoryPages;
 
+[Authorize(Roles = "Admin")]
 public class EditModel : PageModel
 {
     private readonly Barlog_Raul_Lab2Context _context;
